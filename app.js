@@ -12,38 +12,13 @@ const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 const render = require("./lib/htmlRenderer");
 const prompt = inquirer.createPromptModule();
-let id = 0;
+let id = 1;
 
 const question_begin = [
   {
     type: "input",
     name: "title",
     message: "Enter the project name: "
-  }
-];
-
-function getCredential(role) {
-  const question_credential = [
-    {
-      type: "input",
-      name: "name",
-      message: `Enter the ${role}'s name: `
-    },
-    {
-      type: "input",
-      name: "email",
-      message: `Enter the ${role}'s email: `
-    }
-  ];
-  return question_credential;
-}
-
-const question_manager = [
-  ...getCredential("manager"),
-  {
-    type: "input",
-    name: "desc",
-    message: "Enter the managers office number: "
   }
 ];
 
@@ -65,25 +40,39 @@ const question_recursive = [
   }
 ];
 
-const question_intern = [
-  ...getCredential("intern"),
-  {
-    type: "input",
-    name: "desc",
-    message: "Enter the intern's school name: "
-  },
-  ...question_recursive
-];
+function getCredential(role) {
+  const question_credential = [
+    {
+      type: "input",
+      name: "name",
+      message: `Enter the ${role}'s name: `
+    },
+    {
+      type: "input",
+      name: "email",
+      message: `Enter the ${role}'s email: `
+    }
+  ];
+  let desc = { type: "input", name: "desc" };
+  switch (role) {
+    case "manager":
+      desc.message = "Enter the managers office number: ";
+      question_credential.push(desc);
+      break;
+    case "engineer":
+      desc.message = "Enter the engineers GitHub username: ";
+      question_credential.push(desc, ...question_recursive);
+      break;
+    case "intern":
+      desc.message = "Enter the intern's school name: ";
 
-const question_engineer = [
-  ...getCredential("engineer"),
-  {
-    type: "input",
-    name: "desc",
-    message: "Enter the engineers GitHub username: "
-  },
-  ...question_recursive
-];
+      question_credential.push(desc, ...question_recursive);
+      break;
+    default:
+      break;
+  }
+  return question_credential;
+}
 
 function createHTML(employees) {
   console.log("Generating HTML");
@@ -93,39 +82,39 @@ function createHTML(employees) {
   console.log("Success");
 }
 
-function ask() {
-  inquirer.prompt([...question_begin, ...question_manager]).then(answers => {
-    const { title, name, email, desc } = answers;
-    const employees = [title, [new Manager(name, id++, email, desc)]];
-    askEmployee(employees);
+function askAgain(employees, ask, role) {
+  prompt(ask).then(answers => {
+    const { name, email, desc } = answers;
+    let employee = {};
+    if (role === "Intern") {
+      employee = new Intern(name, id++, email, desc);
+    } else {
+      employee = new Engineer(name, id++, email, desc);
+    }
+    employees[1].push(employee);
+    if (answers.askAgain) {
+      askEmployee(employees);
+    } else {
+      createHTML(employees);
+    }
   });
 }
 
 function askEmployee(employees) {
   prompt(question_select).then(answers => {
     if (answers.select === "Intern") {
-      askAgain(employees, question_intern, answers.select);
+      askAgain(employees, ...getCredential("intern"), answers.select);
     } else {
-      askAgain(employees, question_engineer, answers.select);
+      askAgain(employees, ...getCredential("engineer"), answers.select);
     }
   });
 }
 
-function askAgain(employees, ask, role) {
-  inquirer.prompt(ask).then(answers => {
-    const { name, email, desc } = answers;
-    let emp = {};
-    if (role === "Intern") {
-      emp = new Intern(name, id++, email, desc);
-    } else {
-      emp = new Engineer(name, id++, email, desc);
-    }
-    employees[1].push(emp);
-    if (answers.askAgain) {
-      askEmployee(employees);
-    } else {
-      createHTML(employees);
-    }
+function ask() {
+  prompt([...question_begin, ...getCredential("manager")]).then(answers => {
+    const { title, name, email, desc } = answers;
+    const employees = [title, [new Manager(name, id++, email, desc)]];
+    askEmployee(employees);
   });
 }
 

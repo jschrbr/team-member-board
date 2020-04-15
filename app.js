@@ -18,8 +18,8 @@ const question_begin = [
   {
     type: "input",
     name: "title",
-    message: "Enter the project name: "
-  }
+    message: "Enter the project name: ",
+  },
 ];
 
 const question_select = [
@@ -27,8 +27,8 @@ const question_select = [
     type: "list",
     name: "select",
     message: "Select the employee's role: ",
-    choices: ["Engineer", "Intern"]
-  }
+    choices: ["Engineer", "Intern"],
+  },
 ];
 
 const question_recursive = [
@@ -36,8 +36,8 @@ const question_recursive = [
     type: "confirm",
     name: "askAgain",
     message: "Want to enter another employee (just hit enter for YES)?",
-    default: true
-  }
+    default: true,
+  },
 ];
 
 function getCredential(role) {
@@ -45,13 +45,13 @@ function getCredential(role) {
     {
       type: "input",
       name: "name",
-      message: `Enter the ${role}'s name: `
+      message: `Enter the ${role}'s name: `,
     },
     {
       type: "input",
       name: "email",
-      message: `Enter the ${role}'s email: `
-    }
+      message: `Enter the ${role}'s email: `,
+    },
   ];
   let desc = { type: "input", name: "desc" };
   switch (role) {
@@ -65,7 +65,6 @@ function getCredential(role) {
       break;
     case "intern":
       desc.message = "Enter the intern's school name: ";
-
       question_credential.push(desc, ...question_recursive);
       break;
     default:
@@ -83,7 +82,7 @@ function createHTML(employees) {
 }
 
 function askAgain(employees, ask, role) {
-  prompt(ask).then(answers => {
+  prompt(ask).then((answers) => {
     const { name, email, desc } = answers;
     let employee = {};
     if (role === "Intern") {
@@ -101,17 +100,17 @@ function askAgain(employees, ask, role) {
 }
 
 function askEmployee(employees) {
-  prompt(question_select).then(answers => {
+  prompt(question_select).then((answers) => {
     if (answers.select === "Intern") {
-      askAgain(employees, ...getCredential("intern"), answers.select);
+      askAgain(employees, getCredential("intern"), answers.select);
     } else {
-      askAgain(employees, ...getCredential("engineer"), answers.select);
+      askAgain(employees, getCredential("engineer"), answers.select);
     }
   });
 }
 
 function ask() {
-  prompt([...question_begin, ...getCredential("manager")]).then(answers => {
+  prompt([...question_begin, ...getCredential("manager")]).then((answers) => {
     const { title, name, email, desc } = answers;
     const employees = [title, [new Manager(name, id++, email, desc)]];
     askEmployee(employees);
